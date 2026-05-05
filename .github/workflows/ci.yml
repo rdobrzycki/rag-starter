@@ -74,6 +74,9 @@ jobs:
         working-directory: src
         run: uv sync --all-packages --all-extras --frozen
 
+      - name: Create .env file
+        run: cp .env.example .env
+
       - name: Start local API stack
         run: task local:api:up
 
@@ -109,6 +112,9 @@ jobs:
       - name: Sync workspace
         working-directory: src
         run: uv sync --all-packages --all-extras --frozen
+
+      - name: Create .env file
+        run: cp .env.example .env
 
       - name: Run ingestion integration tests
         run: task local:test:integration:ingestion
