@@ -1,0 +1,152 @@
+[
+  {
+    "input": "What is the refund policy?",
+    "expected_output": "Refunds are available within 30 days of purchase.",
+    "expected_sources": ["policy.pdf"]
+  },
+  {
+    "input": "How do I contact support?",
+    "expected_output": "Support can be reached via email at support@example.com or phone.",
+    "expected_sources": ["support.md"]
+  },
+  {
+    "input": "What are the system requirements?",
+    "expected_output": "Minimum requirements include Python 3.11 and 4GB RAM.",
+    "expected_sources": ["readme.md"]
+  },
+  {
+    "input": "Where is the API documentation?",
+    "expected_output": "API documentation is available at /docs and in the docs folder.",
+    "expected_sources": ["api.md"]
+  },
+  {
+    "input": "How do I install the project?",
+    "expected_output": "Install with pip install -r requirements.txt or uv sync.",
+    "expected_sources": ["readme.md"]
+  },
+  {
+    "input": "What license does this use?",
+    "expected_output": "This project is licensed under the MIT License.",
+    "expected_sources": ["license"]
+  },
+  {
+    "input": "Describe the deployment process.",
+    "expected_output": "Deployment uses Docker and can be run via docker-compose.",
+    "expected_sources": ["deploy.md", "readme.md"]
+  },
+  {
+    "input": "What environment variables are required?",
+    "expected_output": "Required env vars include AWS_REGION, BEDROCK_EMBED_MODEL_ID, QDRANT_URL.",
+    "expected_sources": ["readme.md", ".env.example"]
+  },
+  {
+    "input": "How does authentication work?",
+    "expected_output": "Authentication uses API keys or IAM for AWS services.",
+    "expected_sources": ["auth.md"]
+  },
+  {
+    "input": "What is the chunk size for documents?",
+    "expected_output": "Default chunk size is 3500 characters with 300 overlap.",
+    "expected_sources": ["config.md", "readme.md"]
+  },
+  {
+    "input": "Which embedding model is used?",
+    "expected_output": "The system uses Amazon Titan embed text model for embeddings.",
+    "expected_sources": ["readme.md"]
+  },
+  {
+    "input": "How do I run tests?",
+    "expected_output": "Run tests with pytest or task test:unit:api.",
+    "expected_sources": ["readme.md"]
+  },
+  {
+    "input": "What is the maximum query length?",
+    "expected_output": "Queries are limited to 4000 characters.",
+    "expected_sources": ["api.md"]
+  },
+  {
+    "input": "How many documents can I ingest at once?",
+    "expected_output": "Batch ingest supports up to 50 documents per request.",
+    "expected_sources": ["api.md"]
+  },
+  {
+    "input": "What is the default top_k for retrieval?",
+    "expected_output": "Default top_k is 5, maximum is 20.",
+    "expected_sources": ["config.md"]
+  },
+  {
+    "input": "Does the system support filtering by collection?",
+    "expected_output": "Yes, you can specify a collection in the query request.",
+    "expected_sources": ["api.md"]
+  },
+  {
+    "input": "How is feedback stored?",
+    "expected_output": "Feedback is stored in DynamoDB with configurable TTL.",
+    "expected_sources": ["readme.md"]
+  },
+  {
+    "input": "What metrics are exposed?",
+    "expected_output": "Prometheus and CloudWatch metrics are available for queries and errors.",
+    "expected_sources": ["readme.md"]
+  },
+  {
+    "input": "Is there rate limiting?",
+    "expected_output": "Yes, rate limiting is applied per IP with configurable limits.",
+    "expected_sources": ["readme.md"]
+  },
+  {
+    "input": "How do I add a new document?",
+    "expected_output": "POST to /documents with source_uri, text, and optional metadata.",
+    "expected_sources": ["api.md"]
+  },
+  {
+    "input": "What is the similarity threshold?",
+    "expected_output": "Default similarity threshold is 0.70.",
+    "expected_sources": ["config.md"]
+  },
+  {
+    "input": "Can I delete a document?",
+    "expected_output": "Yes, DELETE /documents/{document_id} removes the document and its chunks.",
+    "expected_sources": ["api.md"]
+  },
+  {
+    "input": "What happens when no relevant context is found?",
+    "expected_output": "The system refuses to answer and returns a reason.",
+    "expected_sources": ["readme.md"]
+  },
+  {
+    "input": "Summarize the main features.",
+    "expected_output": "RAG API, document ingestion, vector search, grounded answers, citations.",
+    "expected_sources": ["readme.md"]
+  },
+  {
+    "input": "What is the vector database?",
+    "expected_output": "Qdrant is used as the vector database.",
+    "expected_sources": ["readme.md"]
+  },
+  {
+    "input": "Which LLM is used for generation?",
+    "expected_output": "Claude via AWS Bedrock is used for answer generation.",
+    "expected_sources": ["readme.md"]
+  },
+  {
+    "input": "How are sources cited in the answer?",
+    "expected_output": "Each answer includes a sources list with source_uri, chunk_id, score, excerpt.",
+    "expected_sources": ["api.md"]
+  },
+  {
+    "input": "Is there a health check endpoint?",
+    "expected_output": "Yes, GET /health and GET /ready for liveness and readiness.",
+    "expected_sources": ["api.md"]
+  },
+  {
+    "input": "What is the correlation ID used for?",
+    "expected_output": "Correlation IDs track requests across services for debugging.",
+    "expected_sources": ["readme.md"]
+  },
+  {
+    "input": "How do I run the API locally?",
+    "expected_output": "Use docker-compose or task local:api:up with local Qdrant.",
+    "expected_sources": ["readme.md"]
+  }
+]

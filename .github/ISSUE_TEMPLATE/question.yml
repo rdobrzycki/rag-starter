@@ -1,0 +1,29 @@
+name: Question
+description: Ask for help using or understanding the project
+title: "[Question]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please check the README, docs, and existing issues before opening a new question.
+
+        Do not use this form for security vulnerabilities. Use the private reporting flow described in `SECURITY.md`.
+  - type: textarea
+    id: question
+    attributes:
+      label: Your question
+      description: What are you trying to accomplish, and where are you stuck?
+      placeholder: I am trying to ...
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Share the commands, config, docs links, or code paths you have already checked
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, Python version, and any other relevant local tooling details
+      placeholder: macOS 15, Python 3.11, Docker 27, uv 0.x

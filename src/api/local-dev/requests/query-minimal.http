@@ -1,0 +1,7 @@
+### Minimal Query (using defaults)
+POST http://localhost:8080/query HTTP/1.1
+Content-Type: application/json
+
+{
+  "query": "Tell me about data retention"
+}

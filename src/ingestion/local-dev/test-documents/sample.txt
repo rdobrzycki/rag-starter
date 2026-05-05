@@ -1,0 +1,9 @@
+This is a sample text document for testing the ingestion lambda function.
+
+The lambda should extract this text, chunk it into smaller pieces, generate embeddings using AWS Bedrock, and store the vectors in Qdrant for semantic search.
+
+This document contains multiple paragraphs to test the chunking logic.
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+
+Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
