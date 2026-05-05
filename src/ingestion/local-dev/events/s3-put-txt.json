@@ -1,0 +1,14 @@
+{
+  "Records": [
+    {
+      "s3": {
+        "bucket": {
+          "name": "local-ingestion-bucket"
+        },
+        "object": {
+          "key": "test-documents/sample.txt"
+        }
+      }
+    }
+  ]
+}

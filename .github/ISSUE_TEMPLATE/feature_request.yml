@@ -1,0 +1,31 @@
+name: Feature request
+description: Suggest an improvement to the product, docs, or contributor workflow
+title: "[Feature]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for sharing an idea.
+
+        Do not use this form for security vulnerabilities. Use the private reporting flow described in `SECURITY.md`.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem to solve
+      description: What pain point or limitation are you trying to address?
+      placeholder: I am trying to ...
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+      description: Describe the change you would like to see
+      placeholder: It would help if ...
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Alternatives considered, related workarounds, or anything else that would help evaluate the request

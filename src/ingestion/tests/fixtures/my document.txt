@@ -1,0 +1,6 @@
+This is a test document with a filename containing spaces.
+
+It is used to verify that the ingestion pipeline correctly handles S3 keys
+and URIs that require URL encoding.
+
+The filename is "my document.txt" which contains a space character.

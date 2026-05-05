@@ -1,0 +1,19 @@
+Sample Text Document for Testing
+
+This is a sample text document used for testing the Lambda ingestion service.
+
+Key Features of Our Service:
+- Fast document processing
+- Semantic search capabilities
+- Vector embeddings using AWS Bedrock
+- Integration with Qdrant vector database
+
+Test Sections:
+1. Introduction
+2. Features and Benefits
+3. Technical Architecture
+4. Getting Started
+
+The ingestion service supports multiple document formats including PDF, DOCX, TXT, and Markdown files. Each document is chunked into smaller pieces, embedded using AI models, and stored in a vector database for efficient retrieval.
+
+This sample document contains enough text to generate multiple chunks during processing, allowing us to test the chunking logic and verify that all chunks are properly stored with correct metadata.

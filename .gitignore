@@ -1,0 +1,56 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+*.pyc
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+.venv*/
+venv/
+env/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.hypothesis/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# SAM Local Development
+src/ingestion/local-dev/.aws-sam/
+src/ingestion/requirements.txt
+
+# Terraform
+**/.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.backup
+*.tfvars
+**/backend.tf
+**/tfplan
+**/tfplan.json
+**/graph.json
+
+# UV
+.uv/
+
+
+# OS
+.DS_Store
+._*
+Thumbs.db
+
+# Editor
+.obsidian/
+iac/terraform/modules/app_ingestion/lambda.zip

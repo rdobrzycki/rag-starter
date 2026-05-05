@@ -1,0 +1,339 @@
+version: "3"
+
+tasks:
+  local:compose:up:
+    desc: Start full stack with docker-compose (local)
+    cmds:
+      - docker compose up --build
+
+  local:compose:down:
+    desc: Stop and remove containers (local)
+    cmds:
+      - docker compose down -v
+
+  local:sam:up:
+    desc: Start LocalStack + Qdrant for SAM local development
+    cmds:
+      - docker compose up -d localstack qdrant
+      - echo "Waiting for LocalStack initialization..."
+      - sleep 5
+      - echo "✓ LocalStack ready at http://localhost:4566"
+      - echo "✓ Qdrant ready at http://localhost:6333"
+
+  local:sam:build:
+    desc: Build SAM application for local testing
+    dir: src/ingestion
+    cmds:
+      - uv export --no-hashes --format requirements-txt > requirements.txt
+      - cd local-dev && sam build
+      - |
+        # Copy shared package to build directory (from ingestion directory)
+        SHARED_SRC="../shared/shared"
+        BUILD_DIR="local-dev/.aws-sam/build/IngestionFunction"
+        if [ -d "${SHARED_SRC}" ]; then
+          echo "Copying shared package to build directory..."
+          cp -r "${SHARED_SRC}" "${BUILD_DIR}/"
+          echo "✓ Shared package copied"
+        else
+          echo "Warning: Shared package not found at ${SHARED_SRC}"
+          echo "Current directory: $(pwd)"
+        fi
+
+  local:sam:invoke:
+    desc: Invoke ingestion lambda locally with test event
+    dir: src/ingestion/local-dev
+    cmds:
+      - sam local invoke IngestionFunction --event events/s3-put-txt.json --docker-network code_default --env-vars env.json
+
+  local:sam:debug:
+    desc: Invoke lambda with debugger (attach VS Code on port 5890)
+    dir: src/ingestion/local-dev
+    cmds:
+      - echo "Starting lambda with debugger..."
+      - echo "Once container starts, press F5 in VS Code to attach"
+      - echo ""
+      - sam local invoke IngestionFunction --event events/s3-put-txt.json --docker-network code_default -d 5890 --debug-args "-m debugpy --listen 0.0.0.0:5890 --wait-for-client"
+
+  local:sam:down:
+    desc: Stop LocalStack + Qdrant
+    cmds:
+      - docker compose down
+
+  local:sam:logs:
+    desc: View LocalStack logs
+    cmds:
+      - docker compose logs -f localstack
+
+  # API local development commands
+  local:api:check:
+    desc: Check if API is running (internal helper)
+    cmds:
+      - |
+        if ! curl -s http://localhost:8080/health > /dev/null 2>&1; then
+          echo "❌ API is not running"
+          echo ""
+          echo "Start the API with:"
+          echo "  task local:api:up"
+          echo ""
+          exit 1
+        fi
+
+  local:api:up:
+    desc: Start API with docker-compose
+    cmds:
+      - docker compose up api qdrant -d
+      - echo "Waiting for services to start..."
+      - sleep 3
+      - echo "✓ API ready at http://localhost:8080"
+      - echo "✓ Qdrant ready at http://localhost:6333"
+      - echo ""
+      - echo "Test with - task local:api:health"
+
+  local:api:logs:
+    desc: View API logs
+    cmds:
+      - docker compose logs -f api
+
+  local:api:down:
+    desc: Stop API services
+    cmds:
+      - docker compose down
+
+  local:api:restart:
+    desc: Restart API container
+    cmds:
+      - docker compose restart api
+
+  local:api:rebuild:
+    desc: Rebuild and restart API container with latest code
+    cmds:
+      - docker compose down api
+      - docker compose build api
+      - docker compose up api qdrant -d
+      - echo "Waiting for services to start..."
+      - sleep 3
+      - echo "✓ API rebuilt and ready at http://localhost:8080"
+      - echo "✓ Qdrant ready at http://localhost:6333"
+      - echo ""
+      - echo "Test with - task local:api:health"
+
+  local:api:health:
+    desc: Check API health
+    cmds:
+      - task: local:api:check
+      - curl -s http://localhost:8080/health | jq
+
+  local:api:query:
+    desc: "Test API query endpoint (usage: task local:api:query QUERY='your question')"
+    cmds:
+      - task: local:api:check
+      - |
+        QUERY="${QUERY:-What is the policy?}"
+        curl -s -X POST http://localhost:8080/query \
+          -H "Content-Type: application/json" \
+          -d "{\"query\":\"$QUERY\",\"top_k\":5}" | jq
+
+  local:api:populate:
+    desc: Populate Qdrant with test data for local development
+    dir: src/api
+    cmds:
+      - task: local:api:check
+      - uv run local-dev/scripts/populate-test-data.py
+
+  local:api:ready:
+    desc: Check API readiness (Qdrant + Bedrock connectivity)
+    cmds:
+      - task: local:api:check
+      - curl -s http://localhost:8080/ready | jq
+
+  local:api:docs:
+    desc: Open API documentation in browser
+    cmds:
+      - task: local:api:check
+      - open http://localhost:8080/docs
+
+  local:api:metrics:
+    desc: View Prometheus metrics
+    cmds:
+      - task: local:api:check
+      - curl -s http://localhost:8080/metrics
+
+  local:api:collections:
+    desc: List all Qdrant collections
+    cmds:
+      - task: local:api:check
+      - curl -s http://localhost:8080/collections | jq
+
+  local:api:ingest:
+    desc: "Ingest test document (usage: task local:api:ingest TEXT='your text' URI='source')"
+    cmds:
+      - task: local:api:check
+      - |
+        TEXT="${TEXT:-This is a test document for ingestion.}"
+        URI="${URI:-test://doc.txt}"
+        curl -s -X POST http://localhost:8080/documents \
+          -H "Content-Type: application/json" \
+          -d "{\"source_uri\":\"$URI\",\"text\":\"$TEXT\"}" | jq
+
+  # Development: Quick test shortcuts
+  test:quick:
+    desc: Run quick tests (unit only, quiet mode)
+    cmds:
+      - (cd src/api && uv run --extra dev pytest tests/unit/ -q)
+      - (cd src/ingestion && uv run --extra dev pytest tests/unit/ -q)
+
+  test:watch:api:
+    desc: Run API tests in watch mode (requires pytest-watch)
+    dir: src/api
+    cmds:
+      - uv run --extra dev ptw tests/ -v
+
+  # CI: Full test suite
+  test:ci:
+    desc: Run full test suite for CI (all tests with coverage)
+    cmds:
+      - task: test:coverage:api
+      - task: test:coverage:ingestion
+
+  # S3 Document Management (LocalStack only)
+  local:s3:upload:
+    desc: "Upload document to LocalStack S3 (usage: FILE_PATH='path/to/file' task local:s3:upload)"
+    cmds:
+      - |
+        if [ -z "${FILE_PATH}" ]; then
+          echo "Error: FILE_PATH is required"
+          echo "Usage: FILE_PATH='path/to/file' task local:s3:upload"
+          exit 1
+        fi
+        
+        # Convert relative path to absolute
+        if [[ "${FILE_PATH}" = /* ]]; then
+          ABS_PATH="${FILE_PATH}"
+        else
+          ABS_PATH="$(pwd)/${FILE_PATH}"
+        fi
+        
+        # Normalize path
+        ABS_PATH=$(cd "$(dirname "${ABS_PATH}")" 2>/dev/null && pwd)/$(basename "${ABS_PATH}")
+        
+        if [ ! -f "${ABS_PATH}" ]; then
+          echo "Error: File not found: ${ABS_PATH}"
+          echo "Original path: ${FILE_PATH}"
+          echo "Current directory: $(pwd)"
+          exit 1
+        fi
+        
+        FILENAME=$(basename "${ABS_PATH}")
+        aws s3 cp "${ABS_PATH}" s3://local-ingestion-bucket/test-documents/"${FILENAME}" --endpoint-url http://localhost:4566
+
+  local:s3:list:
+    desc: List all documents in LocalStack S3
+    cmds:
+      - aws s3 ls s3://local-ingestion-bucket/test-documents/ --endpoint-url http://localhost:4566
+
+  local:s3:delete:
+    desc: "Delete document from LocalStack S3 (usage: task local:s3:delete KEY='filename')"
+    cmds:
+      - aws s3 rm s3://local-ingestion-bucket/test-documents/"${KEY}" --endpoint-url http://localhost:4566
+
+  local:s3:download:
+    desc: "Download document from LocalStack S3 (usage: task local:s3:download KEY='filename' OUTPUT_PATH='./file')"
+    cmds:
+      - aws s3 cp s3://local-ingestion-bucket/test-documents/"${KEY}" "${OUTPUT_PATH}" --endpoint-url http://localhost:4566
+
+  # Ingestion Monitoring & Orchestration (local)
+  local:ingest:prepare:
+    desc: "Prepare collection for ingestion (usage: task local:ingest:prepare COLLECTION='documents')"
+    cmds:
+      - |
+        curl -s -X POST http://localhost:8080/collections \
+          -H "Content-Type: application/json" \
+          -d '{"name":"'"${COLLECTION:-documents}"'","vectors":{"size":1024,"distance":"Cosine"}}' | jq
+
+  local:ingest:trigger:
+    desc: "Upload to S3 and trigger Lambda ingestion (usage: task local:ingest:trigger FILE_PATH='doc.txt')"
+    cmds:
+      - task: local:s3:upload FILE_PATH="${FILE_PATH}"
+      - echo "Document uploaded to S3, Lambda ingestion triggered"
+
+  local:ingest:status:
+    desc: Show ingestion status (Qdrant collection stats)
+    cmds:
+      - curl -s http://localhost:8080/collections | jq '.[] | {name, points_count}'
+
+  local:ingest:logs:
+    desc: View LocalStack Lambda logs
+    cmds:
+      - docker compose logs -f localstack | grep -i "ingestion\|lambda" || echo "No ingestion logs yet"
+
+  local:ingest:verify:
+    desc: "Verify ingestion success (usage: task local:ingest:verify COLLECTION='documents')"
+    cmds:
+      - |
+        curl -s http://localhost:8080/collections/"${COLLECTION:-documents}" | \
+          jq '{name, vectors_count: .points_count}'
+
+  # API Document Interaction (local)
+  local:api:documents:list:
+    desc: List all documents from Qdrant collection
+    cmds:
+      - task: local:api:check
+      - curl -s http://localhost:8080/collections | jq
+
+  local:api:documents:delete:
+    desc: "Delete document chunks (usage: task local:api:documents:delete DOC_ID='doc123')"
+    cmds:
+      - task: local:api:check
+      - curl -s -X DELETE http://localhost:8080/documents/"${DOC_ID}" | jq
+
+  local:api:documents:stats:
+    desc: Show collection statistics
+    cmds:
+      - task: local:api:check
+      - curl -s http://localhost:8080/collections | jq '.[] | {name, points_count}'
+
+  local:api:query:test:
+    desc: "Test RAG query (usage: task local:api:query:test QUERY='your question')"
+    cmds:
+      - task: local:api:check
+      - |
+        curl -s -X POST http://localhost:8080/query \
+          -H "Content-Type: application/json" \
+          -d '{"query":"'"${QUERY:-What is the policy?}"'","top_k":5}' | jq
+
+  local:api:embeddings:test:
+    desc: "Test embedding generation (usage: task local:api:embeddings:test TEXT='sample text')"
+    cmds:
+      - task: local:api:check
+      - |
+        curl -s -X POST http://localhost:8080/embed \
+          -H "Content-Type: application/json" \
+          -d '{"text":"'"${TEXT:-test}"'"}' | jq
+
+  # Collection Management (local)
+  local:collections:list:
+    desc: List all Qdrant collections
+    cmds:
+      - task: local:api:check
+      - curl -s http://localhost:8080/collections | jq '.collections[]'
+
+  local:collections:info:
+    desc: "Show collection details (usage: task local:collections:info COLLECTION='documents')"
+    cmds:
+      - task: local:api:check
+      - curl -s http://localhost:8080/collections/"${COLLECTION:-documents}" | jq
+
+  local:collections:create:
+    desc: "Create collection (usage: task local:collections:create COLLECTION='new-coll' VECTOR_SIZE='1024')"
+    cmds:
+      - task: local:api:check
+      - |
+        curl -s -X POST http://localhost:8080/collections \
+          -H "Content-Type: application/json" \
+          -d '{"name":"'"${COLLECTION}"'","vectors":{"size":'"${VECTOR_SIZE:-1024}"',"distance":"Cosine"}}' | jq
+
+  local:collections:delete:
+    desc: "Delete collection (usage: task local:collections:delete COLLECTION='old-coll')"
+    cmds:
+      - task: local:api:check
+      - curl -s -X DELETE http://localhost:8080/collections/"${COLLECTION}" | jq

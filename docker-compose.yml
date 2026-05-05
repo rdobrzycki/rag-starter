@@ -1,0 +1,44 @@
+services:
+  qdrant:
+    image: qdrant/qdrant:latest
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+
+  api:
+    build:
+      context: .
+      dockerfile: ./src/api/Dockerfile
+    ports:
+      - "8080:8080"
+    env_file:
+      - ./.env
+    environment:
+      # Local overrides
+      QDRANT_URL: "http://qdrant:6333"
+      QDRANT_COLLECTION: "documents"
+      QDRANT_API_KEY: ""   # local qdrant default: no auth
+      SIMILARITY_THRESHOLD: "0.70"
+      TOP_K_DEFAULT: "5"
+      TOP_K_MAX: "20"
+      # Set these in .env:
+      # AWS_REGION, BEDROCK_EMBED_MODEL_ID, BEDROCK_LLM_MODEL_ID
+    volumes:
+      - ~/.aws:/root/.aws:ro
+    depends_on:
+      - qdrant
+
+  localstack:
+    image: localstack/localstack:latest
+    ports:
+      - "4566:4566"
+    environment:
+      - SERVICES=s3,ssm,secretsmanager
+      - DEBUG=0
+    volumes:
+      - ./scripts/localstack-init:/etc/localstack/init/ready.d
+
+volumes:
+  qdrant_data:

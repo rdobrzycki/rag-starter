@@ -1,0 +1,25 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Ingestion Lambda - Local Development Only
+
+Globals:
+  Function:
+    Timeout: 60
+    MemorySize: 512
+    Runtime: python3.13
+    Architectures:
+      - arm64
+
+Resources:
+  IngestionFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ..
+      Handler: lambda_handler.handler.handler
+      Environment:
+        Variables:
+          AWS_REGION: us-east-1
+          SSM_PREFIX: /app/local
+          LOCALSTACK_ENDPOINT: http://172.18.0.3:4566
+          LOCALSTACK_AWS_ACCESS_KEY_ID: test
+          LOCALSTACK_AWS_SECRET_ACCESS_KEY: test

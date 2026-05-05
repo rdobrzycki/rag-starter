@@ -1,0 +1,17 @@
+Unicode Test Document 🌍
+
+This document tests various character encodings and scripts:
+
+Emoji: 😀 🎉 🚀 💡 ✨
+Chinese: 这是一个测试文档，用于验证中文字符的处理。
+Arabic: هذا مستند اختبار للتحقق من معالجة الأحرف العربية.
+Cyrillic: Это тестовый документ для проверки обработки кириллических символов.
+Greek: Αυτό είναι ένα δοκιμαστικό έγγραφο για την επαλήθευση.
+Japanese: これは日本語文字の処理を検証するためのテストドキュメントです。
+Korean: 이것은 한국어 문자 처리를 확인하기 위한 테스트 문서입니다.
+
+Special Characters: © ® ™ € £ ¥ § ¶ † ‡
+Math Symbols: ∑ ∏ √ ∞ ≈ ≠ ≤ ≥ ± × ÷
+Accented: café, résumé, naïve, Zürich, señor, São Paulo
+
+This ensures embeddings work correctly with diverse character sets.

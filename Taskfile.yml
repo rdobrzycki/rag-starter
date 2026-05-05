@@ -1,0 +1,145 @@
+version: "3"
+
+includes:
+  local_dev:
+    taskfile: ./taskfiles/local-dev.Taskfile.yml
+    flatten: true
+
+tasks:
+  fmt:
+    desc: Format code with ruff and terraform
+    cmds:
+      - terraform fmt -recursive iac/terraform
+      - (cd src/shared && uv run --extra dev ruff format .)
+      - (cd src/api && uv run --extra dev ruff format .)
+      - (cd src/ingestion && uv run --extra dev ruff format .)
+
+  fmt:check:
+    desc: Check formatting with ruff and terraform without rewriting files
+    cmds:
+      - terraform fmt -check -recursive iac/terraform
+      - (cd src/shared && uv run --extra dev ruff format --check .)
+      - (cd src/api && uv run --extra dev ruff format --check .)
+      - (cd src/ingestion && uv run --extra dev ruff format --check .)
+
+  lint:
+    desc: Lint code with ruff
+    cmds:
+      - (cd src/shared && uv run --extra dev ruff check .)
+      - (cd src/api && uv run --extra dev ruff check .)
+      - (cd src/ingestion && uv run --extra dev ruff check .)
+
+  shared:build:
+    desc: Build shared package (validates package structure and dependencies)
+    dir: src/shared
+    cmds:
+      - uv build
+      - echo "✓ Shared package built successfully at dist/"
+
+  shared:test:
+    desc: Test shared package imports work correctly
+    dir: src/shared
+    cmds:
+      - uv run python -c "from shared.log_config import setup_logging; from shared.correlation import get_correlation_id; print('✓ All imports successful')"
+
+  shared:clean:
+    desc: Clean shared package build artifacts
+    dir: src/shared
+    cmds:
+      - rm -rf dist/ build/ shared.egg-info/ __pycache__ .pytest_cache .ruff_cache
+      - echo "✓ Shared package cleaned"
+
+  ci:shared:
+    desc: Run shared package CI checks (build, imports)
+    cmds:
+      - task: shared:build
+      - task: shared:test
+      - echo "✓ Shared package CI checks passed"
+
+  test:
+    desc: Run the main test suite for the public workspace
+    cmds:
+      - task: test:unit
+      - task: local:test:integration
+
+  test:unit:
+    desc: Run all unit tests for all projects
+    cmds:
+      - echo "=== API unit tests ===" && cd src/api && uv run --extra dev pytest tests/unit/ -q -o log_cli=false
+      - echo "=== Ingestion unit tests ===" && cd src/ingestion && uv run --extra dev pytest tests/unit/ -q -o log_cli=false
+
+  local:test:integration:
+    desc: Run API integration tests from the API package directory
+    cmds:
+      - task: local:test:integration:api
+
+  test:unit:api:
+    desc: Run API unit tests only
+    dir: src/api
+    cmds:
+      - uv run --extra dev pytest tests/unit/ -v
+
+  test:unit:api:retry:
+    desc: Run API retry logic unit tests only
+    dir: src/api
+    cmds:
+      - uv run --extra dev pytest tests/unit/test_retry.py -v
+
+  local:test:integration:api:
+    desc: Run API integration tests from the API package directory
+    dir: src/api
+    cmds:
+      - uv run --extra dev pytest tests/integration/ -v
+
+  test:coverage:api:
+    desc: Run API tests with coverage report
+    dir: src/api
+    cmds:
+      - uv run --extra dev pytest tests/ --cov=rag_api --cov-report=html --cov-report=term
+      - echo "Coverage report at src/api/htmlcov/index.html"
+
+  test:unit:ingestion:
+    desc: Run ingestion unit tests
+    dir: src/ingestion
+    cmds:
+      - uv run --extra dev pytest tests/unit/ -v
+
+  test:unit:ingestion:handler:
+    desc: Run ingestion handler unit tests only
+    dir: src/ingestion
+    cmds:
+      - uv run --extra dev pytest tests/unit/test_handler.py -v
+
+  test:unit:ingestion:retry:
+    desc: Run ingestion retry logic unit tests only
+    dir: src/ingestion
+    cmds:
+      - uv run --extra dev pytest tests/unit/test_retry.py -v
+
+  local:test:integration:ingestion:
+    desc: Run the local ingestion fault-tolerance integration tests
+    dir: src/ingestion
+    cmds:
+      - uv run --extra dev pytest tests/integration/test_fault_tolerance_local.py -v
+
+  test:coverage:ingestion:
+    desc: Run ingestion unit tests with coverage report
+    dir: src/ingestion
+    cmds:
+      - uv run --extra dev pytest tests/unit/ --cov=lambda_handler --cov-report=html --cov-report=term
+      - echo "Coverage report at src/ingestion/htmlcov/index.html"
+
+  local:test:efficiency:
+    desc: Run RAG efficiency tests against the local API (quality + performance)
+    dir: src/api
+    env:
+      EFFICIENCY_API_URL: "http://localhost:8080"
+    cmds:
+      - uv run --extra efficiency pytest tests/efficiency/ -v -m efficiency
+
+  local:test:efficiency:performance:
+    desc: Run RAG performance tests only against the local API
+    dir: src/api
+    cmds:
+      - uv run --extra efficiency python -m tests.efficiency.cli --api-url http://localhost:8080 --test-types performance --output efficiency-performance.json
+

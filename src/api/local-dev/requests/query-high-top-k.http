@@ -1,0 +1,8 @@
+### Query with High top_k
+POST http://localhost:8080/query HTTP/1.1
+Content-Type: application/json
+
+{
+  "query": "Compliance requirements",
+  "top_k": 15
+}
